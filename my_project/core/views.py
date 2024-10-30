@@ -1,15 +1,13 @@
-from django.core.mail import BadHeaderError
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
 from django.core.mail import EmailMultiAlternatives
 from rest_framework.response import Response
 from django.template.loader import render_to_string
 import rest_framework.status as status
 from django.utils.html import strip_tags
-from .models import Project, Task, ProjectMembership
+from .models import Project, Sprint, ProjectMembership
 from accounts.permissions import IsAdminOrOwner, IsDeveloper
 import rest_framework.viewsets as viewsets
-from .serializers import ProjectSerializer, TaskSerializer
+from .serializers import ProjectSerializer, SprintSerializer
 
 
 
@@ -84,6 +82,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
     
     
     
-class TaskViewSet (viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer    
+class SprintViewSet (viewsets.ModelViewSet):
+    
+    queryset = Sprint.objects.all()
+    serializer_class = SprintSerializer    
+    
+    def get_queryset(self):
+        # Get the project ID from the URL
+        project_id = self.kwargs.get('project_id')
+        
+        # Filter sprints based on the project ID
+        return Sprint.objects.filter(project_id=project_id)
