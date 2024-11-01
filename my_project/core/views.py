@@ -4,11 +4,11 @@ from rest_framework.response import Response
 from django.template.loader import render_to_string
 import rest_framework.status as status
 from django.utils.html import strip_tags
-from .models import Project, Sprint, ProjectMembership
+from .models import Project, Sprint, ProjectMembership, Task
 from accounts.permissions import IsAdminOrOwner, IsDeveloper
 import rest_framework.viewsets as viewsets
-from .serializers import ProjectSerializer, SprintSerializer
-
+from .serializers import ProjectSerializer, SprintSerializer, TaskSerializer
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
 
 class SendInvitationEmail(APIView):
@@ -81,15 +81,49 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     
-    
-class SprintViewSet (viewsets.ModelViewSet):
-    
-    queryset = Sprint.objects.all()
-    serializer_class = SprintSerializer    
-    
+class SprintViewSet(viewsets.ModelViewSet):
+    serializer_class = SprintSerializer
+
     def get_queryset(self):
-        # Get the project ID from the URL
-        project_id = self.kwargs.get('project_id')
         
-        # Filter sprints based on the project ID
-        return Sprint.objects.filter(project_id=project_id)
+        project_id = self.kwargs.get('project_id')
+        if project_id:
+            # Filter sprints based on the project ID
+            return Sprint.objects.filter(project_id=project_id)
+        # Default to all sprints if no project_id is specified
+        return Sprint.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        project_id = self.kwargs.get('project_id')
+        sprint_id = self.kwargs.get('pk')  # This is usually passed as 'pk' for retrieve actions
+        
+        # Try to fetch the sprint with the specific project and sprint ID
+        try:
+            sprint = Sprint.objects.get(id=sprint_id, project_id=project_id)
+            serializer = self.get_serializer(sprint)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Sprint.DoesNotExist:
+            return Response({"error": "Sprint not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class TaskView(APIView):
+ 
+    def get(self, request, project_id, sprint_id, task_id=None):
+        
+        try:
+            # Get the sprint, ensuring it belongs to the specified project
+            sprint = Sprint.objects.get(id=sprint_id, project_id=project_id)
+            
+            # Filter tasks within the sprint
+            if task_id:
+                task = Task.objects.get(id=task_id, sprint=sprint)
+                serializer = TaskSerializer(task)
+                # serializer.is_valid()
+                # print(serializer.errors)
+            else:
+                tasks = Task.objects.filter(sprint=sprint)
+                
+                serializer = TaskSerializer(tasks, many=True)
+             
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except (Sprint.DoesNotExist, Task.DoesNotExist):
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)

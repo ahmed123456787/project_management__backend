@@ -2,12 +2,12 @@ from rest_framework.serializers import ModelSerializer ,SerializerMethodField
 from .models import *
 
 class TaskSerializer (ModelSerializer) : 
-    model = Task 
-    fields = "__all__"
+    class Meta :
+        model = Task 
+        fields = "__all__"
 
 class SprintSerializer(ModelSerializer) :
-    
-    class Meta : 
+    class Meta :  
         model = Sprint
         fields = "__all__"
 

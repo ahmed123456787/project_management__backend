@@ -1,20 +1,22 @@
 from django.db import models
 from accounts.models import CustomUser 
-
+from django.conf import settings
 
 class Project(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, default=None)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, default=None)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return self.name
+  
     
 class Sprint(models.Model):
     name = models.CharField(max_length=200)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='projects', null=True, blank=True, default=None)
+    
     
 class Task(models.Model):
     STATUS_CHOICES = [
@@ -24,7 +26,7 @@ class Task(models.Model):
     ]
     
     name = models.CharField(max_length=100)
-    task_list = models.ForeignKey(Sprint, on_delete=models.CASCADE, null=True, blank=True)
+    sprint = models.ForeignKey(Sprint, on_delete=models.CASCADE, null=True, blank=True)
     description = models.TextField()
     due_date = models.DateField(null=True, blank=True)
     remainder_date = models.DateField(null=True, blank=True)
@@ -32,8 +34,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.name} "
+
     
 class Comment(models.Model):
     comment = models.CharField(max_length=400)
