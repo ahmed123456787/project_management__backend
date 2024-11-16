@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     "accounts",
     "core",
 ]
@@ -116,15 +117,15 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # settings.py
-AUTH_USER_MODEL = 'accounts.CustomUser'  # Replace 'your_app' with the actual app name for CustomUser
+AUTH_USER_MODEL = 'accounts.User'  # Replace 'your_app' with the actual app name for CustomUser
 
 # settings.py
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        # Add other authentication classes if needed
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
 

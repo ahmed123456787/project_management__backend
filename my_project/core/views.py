@@ -8,8 +8,9 @@ from .models import Project, Sprint, ProjectMembership, Task
 from accounts.permissions import IsAdminOrOwner, IsDeveloper
 import rest_framework.viewsets as viewsets
 from .serializers import ProjectSerializer, SprintSerializer, TaskSerializer
-from rest_framework.generics import RetrieveUpdateDestroyAPIView
-
+from rest_framework.generics import ListCreateAPIView
+from rest_framework import mixins
+from rest_framework.viewsets import generics
 
 class SendInvitationEmail(APIView):
     def post(self, request):
@@ -32,41 +33,26 @@ class SendInvitationEmail(APIView):
         
         print(msg.send())
         return Response({"message": "Invitation email sent!"}, status=status.HTTP_200_OK)
-        # except BadHeaderError:
-        #     return Response({"error": "Invalid header found."}, status=status.HTTP_400_BAD_REQUEST)
-        # except Exception as e:
-        #     return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
         
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-
-    # def get_permissions(self):
-        
-    #      """
-    #      Assign custom permissions based on the action being performed.
-    #      """
-    #      if self.action in ['create','update', 'partial_update','destroy']:
-    #         permission_classes = [IsAdminOrOwner]
-             
-    #      else:  # Default to read-only access for retrieve and list actions
-    #         permission_classes = [IsAdminOrOwner | IsDeveloper]
-    #      return [permission() for permission in permission_classes]     
-            
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        if not queryset.exists():
-            return Response({"message": "No projects found."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)  
-          
+ 
+    def retrieve(self, request, *args, **kwargs):
+        # Check if the project exists
+        instance = self.get_object()
+        if not instance:
+            return Response(
+                {"message": "No projects found with the given ID"},
+                status=status.HTTP_404_NOT) 
+        serializer = ProjectSerializer(instance)    
+        return Response(serializer.data,status=status.HTTP_200_OK)  
     def create(self, request, *args, **kwargs):
         # Step 1: Get the data from the request
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        # Step 2: Save the new project instance
         project = serializer.save()
         
         # Step 3: Create a ProjectMembership entry for the user who created the project
@@ -82,48 +68,51 @@ class ProjectViewSet(viewsets.ModelViewSet):
     
     
 class SprintViewSet(viewsets.ModelViewSet):
+    queryset = Sprint.objects.all()
     serializer_class = SprintSerializer
-
+    
+   
+class TaskViewSet(viewsets.ModelViewSet):
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
+    
+        
+    
+class SprintsProjectView(generics.ListAPIView,
+                         generics.RetrieveAPIView):
+    """Viewset for sprints for a specific project and for specific sprints"""
+    queryset = Sprint.objects.all()
+    serializer_class = SprintSerializer
+    
     def get_queryset(self):
-        
-        project_id = self.kwargs.get('project_id')
-        if project_id:
-            # Filter sprints based on the project ID
-            return Sprint.objects.filter(project_id=project_id)
-        # Default to all sprints if no project_id is specified
-        return Sprint.objects.all()
+        project_id = self.kwargs.get("project_id")
+        sprint_id = self.kwargs.get("sprint_id")
 
-    def retrieve(self, request, *args, **kwargs):
-        project_id = self.kwargs.get('project_id')
-        sprint_id = self.kwargs.get('pk')  # This is usually passed as 'pk' for retrieve actions
+        queryset = Sprint.objects.filter(project_id=project_id)
+        if sprint_id:
+            queryset = queryset.filter(id=sprint_id)
+        return queryset
         
-        # Try to fetch the sprint with the specific project and sprint ID
-        try:
-            sprint = Sprint.objects.get(id=sprint_id, project_id=project_id)
-            serializer = self.get_serializer(sprint)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Sprint.DoesNotExist:
-            return Response({"error": "Sprint not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+class TasksProjectSprintView(generics.ListAPIView):
+    """View to get a list of tasks depending on project and sprints"""
+    
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
+    
+    def get_queryset(self):
+        project_id = self.kwargs.get("project_id")
+        sprint_id = self.kwargs.get("sprint_id")
+        task_id = self.kwargs.get("task_id")
 
-class TaskView(APIView):
- 
-    def get(self, request, project_id, sprint_id, task_id=None):
+        # Filter tasks by sprint and project
+        queryset = Task.objects.filter(sprint__project_id=project_id, sprint_id=sprint_id)
+
+        # Further filter by task ID if provided
+        if task_id:
+            queryset = queryset.filter(id=task_id)
         
-        try:
-            # Get the sprint, ensuring it belongs to the specified project
-            sprint = Sprint.objects.get(id=sprint_id, project_id=project_id)
-            
-            # Filter tasks within the sprint
-            if task_id:
-                task = Task.objects.get(id=task_id, sprint=sprint)
-                serializer = TaskSerializer(task)
-                # serializer.is_valid()
-                # print(serializer.errors)
-            else:
-                tasks = Task.objects.filter(sprint=sprint)
-                
-                serializer = TaskSerializer(tasks, many=True)
-             
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except (Sprint.DoesNotExist, Task.DoesNotExist):
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        return queryset
+
+        
+        

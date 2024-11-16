@@ -1,27 +1,33 @@
 from rest_framework.serializers import ModelSerializer ,SerializerMethodField
 from .models import *
 
+
 class TaskSerializer (ModelSerializer) : 
     class Meta :
         model = Task 
-        fields = "__all__"
+        fields = ["id", "name","due_date","remainder_date","status","created_at", "updated_at","sprint"]
 
 class SprintSerializer(ModelSerializer) :
+    tasks = TaskSerializer(many=True,read_only=True)
     class Meta :  
         model = Sprint
-        fields = "__all__"
+        fields = ["id", "name", "project","tasks"]
 
 class ProjectSerializer(ModelSerializer):
-    sprints = SerializerMethodField()
-    
+    sprints = SprintSerializer(many=True,read_only=True) 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'created_at', 'updated_at', 'sprints']
+        fields = ['id', 'name', 'description', 'created_at', 'updated_at',"sprints"]
 
-    def get_sprints(self, obj):
-        # Use the related_name to retrieve the related sprints
-        sprints = obj.projects.all()  # Here, 'projects' is the related name you've assigned
-        return SprintSerializer(sprints, many=True).data  # Serialize the sprints
+    
+
+
+
+
+
+
+
+
 
 
         

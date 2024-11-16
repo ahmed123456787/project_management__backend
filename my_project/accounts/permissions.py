@@ -1,26 +1,6 @@
 import rest_framework.permissions  as permissions
 from core.models import ProjectMembership 
  
-# class Admin(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#         if request.user.groups.filter(name="admin").exists():
-#             return True    
-
-
-# class Developer(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#         if request.user.groups.filter(name="developper").exists():
-#             return True 
-        
-        
-# class Viewer(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#         if request.user.groups.filter(name="viewer").exists():
-#             return True                 
-        
-        
-        
-
 
 class IsAdminOrOwner(permissions.BasePermission):
     """
@@ -30,7 +10,6 @@ class IsAdminOrOwner(permissions.BasePermission):
        
     def has_object_permission(self, request, view, obj):
         # Allow the owner to access the project as well as admins
-        print(request)
         if request.user == obj.owner:
             return True
         
