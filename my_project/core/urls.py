@@ -5,7 +5,7 @@ from .views import ProjectViewSet, SprintViewSet, TaskViewSet, SprintsProjectVie
 
 router = DefaultRouter()
 router.register("projects", ProjectViewSet)
-router.register("sprints",SprintViewSet)
+router.register("sprints",SprintViewSet,basename="sprint")
 router.register("tasks",TaskViewSet)
 
 urlpatterns  = [

@@ -20,22 +20,13 @@ class ProjectSerializer(ModelSerializer):
         fields = ['id', 'name', 'description', 'created_at', 'updated_at',"sprints"]
 
     
+class ProjectMembershipSerializer(ModelSerializer):
+    project = ProjectSerializer()  # Include the full project details
 
-
-
-
-
-
-
-
-
-
-        
-    
-        
-
-        
-class ProjectMembershipSerializer(ModelSerializer) :
-    class Meta : 
+    class Meta:
         model = ProjectMembership
-        fields = "__all__"
+        fields = ["id", "project", "role", "user"]
+        extra_kwargs = {
+            "user": {"write_only": True},  
+        }
+         

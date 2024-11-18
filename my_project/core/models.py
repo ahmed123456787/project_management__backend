@@ -4,23 +4,25 @@ from django.conf import settings
 
 
 class Project(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, default=None)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('name', 'user')
     
     def __str__(self):
         return self.name
   
     
 class Sprint(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200,unique=True)
     project = models.ForeignKey(
         Project, 
         on_delete=models.CASCADE, 
         related_name='sprints',  # Updated related_name
-        null=True, blank=True
     )
     
     def __str__(self):
@@ -34,7 +36,7 @@ class Task(models.Model):
         ("done", "Done"),   
     ]
     
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,unique=True)
     sprint = models.ForeignKey(
         Sprint,
         on_delete=models.CASCADE,
@@ -70,11 +72,11 @@ class ProjectMembership(models.Model):
     ]
      
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="memberships", null=True, blank=True, default=None)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="project_memberships", null=True, blank=True, default=None)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="users", null=True, blank=True, default=None)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     
     class Meta:
         unique_together = ('project', 'user')
     
     def __str__(self):
-        return f"{self.user.name} - {self.role} in {self.project.name}"
+        return f"{self.user.name} as {self.role} in {self.project.name}"
