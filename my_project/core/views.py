@@ -8,14 +8,12 @@ from .models import Project, Sprint, ProjectMembership, Task
 from accounts.permissions import IsAdminOrOwner, IsDeveloper
 import rest_framework.viewsets as viewsets
 from .serializers import ProjectSerializer, SprintSerializer, TaskSerializer, ProjectMembershipSerializer
-from rest_framework.generics import ListCreateAPIView
-from rest_framework import mixins
 from rest_framework.viewsets import generics
 from accounts.permissions import IsAdminOrOwner, IsDeveloper
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound
+
 
 class SendInvitationEmail(APIView):
     def post(self, request):
@@ -161,7 +159,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
+    
 class SprintViewSet(viewsets.ModelViewSet):
     serializer_class = SprintSerializer
     permission_classes = [IsAuthenticated]
@@ -212,6 +210,3 @@ class TasksProjectSprintView(generics.ListAPIView):
             queryset = queryset.filter(id=task_id)
         
         return queryset
-
-        
-        

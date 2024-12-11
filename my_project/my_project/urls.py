@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/send-invitation/', SendInvitationEmail.as_view(), name='send_invitation'),
     path('user/',include("accounts.urls")),
     path('api/',include("core.urls"),name="project"),
+    path("notifications/",include("notification.urls")),
 ]

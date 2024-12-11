@@ -22,6 +22,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "channels",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     "accounts",
     "core",
+    "notification",
 ]
 
 MIDDLEWARE = [
@@ -63,7 +65,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'my_project.wsgi.application'
-
+ASGI_APPLICATION = 'core.asgi.application' 
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
